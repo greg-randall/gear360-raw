@@ -1,0 +1,31 @@
+#!/bin/bash
+# Serve the small EXIF thumbnail embedded in a camera JPEG (for the "last shot" card / file list).
+#   GET /cgi-bin/thumb?path=<urlencoded /sdcard/... .JPG>
+# Uses the mod's jhead (`jhead -st - file` writes the thumbnail to stdout). 404 if anything fails.
+
+urldecode() { local s="${1//+/ }"; printf '%b' "${s//%/\\x}"; }
+param() {
+    local kv
+    for kv in ${QUERY_STRING//&/ }; do
+        if [ "${kv%%=*}" = "$1" ]; then urldecode "${kv#*=}"; return; fi
+    done
+}
+
+path="$(param path)"
+case "$path" in /sdcard/*) ;; *) path="" ;; esac
+case "$path" in *..*) path="" ;; esac
+tmp="/tmp/thumb.$$"
+
+if [ -n "$path" ] && [ -f "$path" ] && /sdcard/mods/jhead -st - "$path" > "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+    echo "Content-Type: image/jpeg"
+    echo "Content-Length: $(stat -c %s "$tmp")"
+    echo "Cache-Control: max-age=86400"
+    echo ""
+    cat "$tmp"
+else
+    echo "Status: 404 Not Found"
+    echo "Content-Type: text/plain"
+    echo ""
+    echo "no thumbnail"
+fi
+rm -f "$tmp"

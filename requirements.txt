@@ -1,0 +1,7 @@
+numpy
+opencv-contrib-python   # cv2.aruco (ChArUco) is used by grid_solve.py / charuco_to_pts.py / make_charuco.py
+scipy
+scikit-image
+pidng
+capstone
+pyelftools

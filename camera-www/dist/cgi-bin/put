@@ -1,0 +1,31 @@
+#!/bin/bash
+# Deploy helper: write the POST body to a file under /sdcard/mods/www/.
+#   curl --data-binary @file "http://CAMERA:8888/cgi-bin/put?path=index.html"
+# Only relative paths inside mods/www are accepted. Replies with the md5sum of the written file.
+
+urldecode() { local s="${1//+/ }"; printf '%b' "${s//%/\\x}"; }
+param() {
+    local kv
+    for kv in ${QUERY_STRING//&/ }; do
+        if [ "${kv%%=*}" = "$1" ]; then urldecode "${kv#*=}"; return; fi
+    done
+}
+
+echo "Content-Type: text/plain; charset=utf-8"
+echo "Cache-Control: no-store"
+echo ""
+
+rel="$(param path)"
+case "$rel" in
+    "" | /* | *..*) echo "refused: bad path '$rel'"; exit 0 ;;
+esac
+dst="/sdcard/mods/www/$rel"
+mkdir -p "$(dirname "$dst")"
+# Write in place (truncate + write). Do NOT write a temp file and mv it over the target: on this camera's
+# exFAT driver, rename-over-existing leaves phantom duplicate directory entries (seen 2026-10-10).
+if head -c "${CONTENT_LENGTH:-0}" > "$dst"; then
+    case "$rel" in cgi-bin/*) chmod 755 "$dst" ;; esac
+    md5sum "$dst"
+else
+    echo "write failed: $dst"
+fi

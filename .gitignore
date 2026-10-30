@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+# camera output and local work
+*.raw
+*.dng
+*.JPG
+*.jpg
+!utils/grid_preview.jpg
+camera-logs/
+firmware/
+captures/

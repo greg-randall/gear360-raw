@@ -1,0 +1,585 @@
+{
+	"$schema": "https://www.ptgui.com/schemas/project_v33.schema.json",
+	"contenttype": "com.ptgui.project_pro",
+	"software": "PTGui Pro 12.27",
+	"fileversion": 33,
+	"compatibleversion": 6,
+	"compatibleapplication": "PTGui 11",
+	"project": {
+		"pathseparator": "\\",
+		"portraitcameraorientation": "counterclockwise",
+		"metadata": {
+			"resolution": 3e2,
+			"overridelatitude": null,
+			"overridelongitude": null,
+			"overridedirection": null
+		},
+		"outputcomponents": {
+			"hdrlayers": false,
+			"hdrblendplanes": false,
+			"hdrblended": false,
+			"ldrpanorama": true,
+			"ldrlayers": false,
+			"ldrblendplanes": false
+		},
+		"hdrsettings": {
+			"tonemappanorama": false,
+			"fileformat": "exr",
+			"tiffparams": {
+				"compression": "lzw",
+				"datatype": "f32",
+				"alphatype": "associated"
+			},
+			"psdparams": {
+				"compression": "none",
+				"datatype": "f32",
+				"layermode": "layered"
+			},
+			"exrparams": {
+				"alphamode": "withalpha",
+				"bitdepth": "half",
+				"compression": "PIZ"
+			},
+			"tonemapsettings": {
+				"targetbrightness": 4.50000000000000011e-1,
+				"autoboost": true,
+				"boostshadows": 2e1,
+				"reducehighlights": 2e1,
+				"compression": 1.49999999999999994e-1
+			},
+			"exposurefusionsettings": {
+				"targetbrightness": 5e-1,
+				"boostshadows": 0,
+				"reducehighlights": 0,
+				"sigma": 2.00000000000000011e-1,
+				"algorithm": "default"
+			},
+			"hdrmethod": "truehdr",
+			"bracketedflow": "auto",
+			"noisefloor": 0,
+			"exposurefusesinglebrackets": false,
+			"precision": "halffloat"
+		},
+		"projectsettings": {
+			"alignsettings": {
+				"generatecp": true,
+				"optimize": true,
+				"roughlyalign": true,
+				"straighten": true,
+				"fit": true,
+				"chooseprojection": true,
+				"optimizeexposure": true,
+				"optimizeexposureonlyifaligned": true,
+				"isprealigned": false
+			},
+			"templatesettings": {
+				"lens": true,
+				"imageparams": true,
+				"preservepanoramaorientation": false,
+				"mask": true,
+				"panoramasettings": true,
+				"projectsettings": true,
+				"optimizer": true,
+				"linkimages": "autodetect",
+				"cameracurve": "nonraw"
+			},
+			"batchstitchersettings": {
+				"align": true,
+				"stitch": true,
+				"stitchonlyifcontrolpoints": true
+			},
+			"defaultfilenaming": {
+				"defaultprojectfilenamemode": "sameassourceimage",
+				"defaultprojectfilenamecustom": " Panorama",
+				"defaultprojectfoldermode": "sameassourceimage",
+				"defaultprojectfoldercustom": "",
+				"defaultpanoramafilenamemode": "sameasproject",
+				"defaultpanoramafilenamecustom": "",
+				"defaultpanoramafoldermode": "sameasproject",
+				"defaultpanoramafoldercustom": "",
+				"userelativesourceimagepaths": true
+			},
+			"hdrsettings": {
+				"hdrlinkmode": "hdrlink",
+				"hdrlinkwithoutasking": false,
+				"hdraskmode": "ask"
+			},
+			"optimizeraskreinitialize": true,
+			"useexifforbatchbuilder": false,
+			"useexif": true,
+			"honorexiforientation": true,
+			"multilenscompositeimagesupport": "loadtwice",
+			"autosetpanoramato360equirect": true,
+			"useorientationsensordata": true
+		},
+		"outputsize": {
+			"mode": "relative",
+			"fractionofoptimumsize": 1
+		},
+		"previewsizerelative": 2.5e-1,
+		"blend": {
+			"seamfinding": true,
+			"seamfindingprecision": -3,
+			"engine": "zerooverlap",
+			"redmasktransparent": true,
+			"fillholes": false,
+			"maskpushseams": true
+		},
+		"hasbeenoptimized": true,
+		"autocpdone": false,
+		"simpleproject": false,
+		"templateapplied": false,
+		"panoramaparams": {
+			"outputfile": "",
+			"hfov": 3.6e2,
+			"vfov": 1.8e2,
+			"projection": "equirectangular",
+			"projectioncompression": {
+				"rectilinearx": 0,
+				"rectilineary": 0,
+				"cylindricaly": 0,
+				"transversecylindricalx": 0,
+				"vedutismox": 1,
+				"transversevedutismoy": 1,
+				"stereographic": 1,
+				"rectifisheye": 1
+			},
+			"interpolator": "default",
+			"fileformat": "jpeg",
+			"jpegparams": {
+				"quality": 95
+			},
+			"tiffparams": {
+				"compression": "packbits",
+				"datatype": "u8",
+				"alphatype": "associated"
+			},
+			"psdparams": {
+				"compression": "packbits",
+				"datatype": "u8",
+				"layermode": "layered"
+			},
+			"qtvrparams": {
+				"windowsize": [800,600],
+				"cubesizeauto": true,
+				"cubesize": 1000,
+				"jpegquality": 70,
+				"includepreview": false,
+				"pan": {
+					"initial": 0,
+					"min": -1.8e2,
+					"max": 1.8e2
+				},
+				"tilt": {
+					"initial": 0,
+					"min": -9e1,
+					"max": 9e1
+				},
+				"fov": {
+					"initial": 9e1,
+					"min": 1e1,
+					"max": 1.2e2
+				},
+				"autolimits": true
+			},
+			"outputcrop": [0,0,1,1],
+			"outputiccprofile": "ad38d078ed1459b0429c67b6774e3d52",
+			"useiccprofilefromsourceimages": true
+		},
+		"optimizer": {
+			"hvcpmode": "twopass",
+			"linkpitch": false,
+			"linkroll": false,
+			"simplemode": true,
+			"simplemodesettings": {
+				"optimizefov": true,
+				"optimizelens": "heavyplusshift",
+				"anchorimagegroup": 0,
+				"anchorimage": null
+			}
+		},
+		"globallenses": [
+			{
+				"lens": {
+					"params": {
+						"projection": "circularfisheye",
+						"fisheyefactor": -6.98107999999999951e-1,
+						"focallength": 1.03123998112887438,
+						"theoreticalfocallength": 1.19999999999999996,
+						"cropcircleradius": 1.39924430814330125,
+						"cropcenteroffset": {
+							"longside": 2.23174030166242876e-1,
+							"shortside": -1.10345578616328024e-3
+						},
+						"a": -1.34981356617532994e-1,
+						"b": 1.48901990670303297e-1,
+						"c": 8.62506476804137806e-2,
+						"sensordiagonal": 6.29999999999999982,
+						"mirrored": false
+					},
+					"optimizerflags": {
+						"fov": true,
+						"a": true,
+						"b": true,
+						"c": true,
+						"fisheyefactor": false
+					}
+				},
+				"shift": {
+					"params": {
+						"longside": 3.95348479835933313e-4,
+						"shortside": -3.89595528998742122e-4
+					},
+					"optimizerflags": {
+						"longside": true,
+						"shortside": true
+					}
+				},
+				"shear": {
+					"params": {
+						"hshear": 0,
+						"vshear": 0
+					},
+					"optimizerflags": {
+						"hshear": false,
+						"vshear": false
+					}
+				},
+				"photometric": {
+					"optimizevignetting": "yes",
+					"vignettingcoefficients": []
+				}
+			}
+		],
+		"globalcameracurves": [],
+		"photometric": {
+			"whitepoint": null,
+			"exposureoffset": 0,
+			"exposurecompensation": true,
+			"optimizeexposure": "auto",
+			"optimizewhitebalance": "no",
+			"optimizeflare": "no"
+		},
+		"postprocess": {
+			"toningfromlinear": {
+				"luminancecurve": {
+					"a": 2.54999999999999982,
+					"b": 5.99999999999999978e-1
+				},
+				"saturationfactor": 1
+			},
+			"additionaltoning": {
+				"luminancecurve": {
+					"a": 0,
+					"b": 0
+				},
+				"saturationfactor": 1
+			}
+		},
+		"imagegroups": [
+			{
+				"size": [5824,2896],
+				"individuallens": null,
+				"individualshift": null,
+				"individualshear": null,
+				"individualcropcenter": {
+					"longside": -2.2482921322765001e-1,
+					"shortside": 2.18976107131725602e-10
+				},
+				"globallens": 0,
+				"viewrotate": "auto",
+				"blendweight": 1e2,
+				"position": {
+					"params": {
+						"yaw": 0,
+						"pitch": 0,
+						"roll": 0,
+						"vpx": 0,
+						"vpy": 0,
+						"vpd": 0,
+						"vppan": 0,
+						"vptilt": 0
+					},
+					"optimizerflags": {
+						"yaw": false,
+						"pitch": false,
+						"roll": false,
+						"vp": "reset"
+					}
+				},
+				"maskbitmap": null,
+				"linkable": {
+					"position": {
+						"params": {
+							"yaw": 0,
+							"pitch": 0,
+							"roll": 0,
+							"vpx": 0,
+							"vpy": 0,
+							"vpd": 0,
+							"vppan": 0,
+							"vptilt": 0
+						},
+						"optimizerflags": {
+							"yaw": false,
+							"pitch": false,
+							"roll": false,
+							"vp": "reset"
+						}
+					},
+					"maskbitmap": null
+				},
+				"images": [
+					{
+						"filename": "360_0384.dng",
+						"metadata": {
+							"aperture": null,
+							"exposuretime": null,
+							"iso": null,
+							"filetimestamp": 1791818008,
+							"filesize": 33733216,
+							"wbmode": null,
+							"exposurebias": null,
+							"pixelformat": {
+								"datatype": "u16",
+								"channels": 3
+							},
+							"iccprofile": null
+						},
+						"usecontrolpoints": true,
+						"include": true,
+						"includeinpreview": true,
+						"useforphotometric": true,
+						"photometric": {
+							"flare": 0,
+							"exposureoffset": 0,
+							"whitepoint": {
+								"temperature": 2.772166259765625e3
+							},
+							"globalcameracurve": null
+						},
+						"linkable": null
+					}
+				]
+			},
+			{
+				"size": [5824,2896],
+				"individuallens": null,
+				"individualshift": null,
+				"individualshear": null,
+				"individualcropcenter": null,
+				"globallens": 0,
+				"viewrotate": "auto",
+				"blendweight": 1e2,
+				"position": {
+					"params": {
+						"yaw": -1.79905556053554676e2,
+						"pitch": 8.25926575971124066e-1,
+						"roll": 2.50266822076071094e-1,
+						"vpx": 0,
+						"vpy": 0,
+						"vpd": 0,
+						"vppan": 0,
+						"vptilt": 0
+					},
+					"optimizerflags": {
+						"yaw": true,
+						"pitch": true,
+						"roll": true,
+						"vp": "reset"
+					}
+				},
+				"maskbitmap": null,
+				"linkable": {
+					"position": {
+						"params": {
+							"yaw": -1.79905556053554676e2,
+							"pitch": 8.25926575971124066e-1,
+							"roll": 2.50266822076071094e-1,
+							"vpx": 0,
+							"vpy": 0,
+							"vpd": 0,
+							"vppan": 0,
+							"vptilt": 0
+						},
+						"optimizerflags": {
+							"yaw": true,
+							"pitch": true,
+							"roll": true,
+							"vp": "reset"
+						}
+					},
+					"maskbitmap": null
+				},
+				"images": [
+					{
+						"filename": "360_0384.dng",
+						"metadata": {
+							"aperture": null,
+							"exposuretime": null,
+							"iso": null,
+							"filetimestamp": 1791818008,
+							"filesize": 33733216,
+							"wbmode": null,
+							"exposurebias": null,
+							"pixelformat": {
+								"datatype": "u16",
+								"channels": 3
+							},
+							"iccprofile": null
+						},
+						"usecontrolpoints": true,
+						"include": true,
+						"includeinpreview": true,
+						"useforphotometric": true,
+						"photometric": {
+							"flare": 0,
+							"exposureoffset": 0,
+							"whitepoint": {
+								"temperature": 2.772166259765625e3
+							},
+							"globalcameracurve": null
+						},
+						"linkable": null
+					}
+				]
+			}
+		],
+		"controlpoints": [
+			{"t":0,"0":[0,0,133,1115],"1":[1,0,5677,1111]},
+			{"t":0,"0":[0,0,110,1228],"1":[1,0,5701,1223]},
+			{"t":0,"0":[0,0,96,1345],"1":[1,0,5715,1340]},
+			{"t":0,"0":[0,0,92,1466],"1":[1,0,5719,1460]},
+			{"t":0,"0":[0,0,99,1586],"1":[1,0,5713,1580]},
+			{"t":0,"0":[0,0,117,1705],"1":[1,0,5696,1699]},
+			{"t":0,"0":[0,0,145,1820],"1":[1,0,5668,1814]},
+			{"t":0,"0":[0,0,102,1096],"1":[1,0,5638,1110]},
+			{"t":0,"0":[0,0,148,1109],"1":[1,0,5686,1098]},
+			{"t":0,"0":[0,0,82,1187],"1":[1,0,5657,1196]},
+			{"t":0,"0":[0,0,128,1197],"1":[1,0,5707,1187]},
+			{"t":0,"0":[0,0,66,1281],"1":[1,0,5671,1285]},
+			{"t":0,"0":[0,0,114,1289],"1":[1,0,5722,1281]},
+			{"t":0,"0":[0,0,58,1378],"1":[1,0,5679,1377]},
+			{"t":0,"0":[0,0,106,1383],"1":[1,0,5730,1377]},
+			{"t":0,"0":[0,0,57,1477],"1":[1,0,5680,1470]},
+			{"t":0,"0":[0,0,105,1478],"1":[1,0,5732,1473]},
+			{"t":0,"0":[0,0,62,1576],"1":[1,0,5675,1564]},
+			{"t":0,"0":[0,0,111,1574],"1":[1,0,5726,1570]},
+			{"t":0,"0":[0,0,75,1673],"1":[1,0,5664,1656]},
+			{"t":0,"0":[0,0,123,1669],"1":[1,0,5714,1666]},
+			{"t":0,"0":[0,0,95,1768],"1":[1,0,5646,1746]},
+			{"t":0,"0":[0,0,142,1762],"1":[1,0,5694,1761]},
+			{"t":0,"0":[0,0,121,1862],"1":[1,0,5622,1834]},
+			{"t":0,"0":[0,0,166,1849],"1":[1,0,5669,1850]},
+			{"t":0,"0":[0,0,151,1946],"1":[1,0,5596,1914]},
+			{"t":0,"0":[0,0,2727,1063],"1":[1,0,3041,1052]},
+			{"t":0,"0":[0,0,2784,1044],"1":[1,0,3101,1067]},
+			{"t":0,"0":[0,0,2755,1171],"1":[1,0,3012,1163]},
+			{"t":0,"0":[0,0,2813,1157],"1":[1,0,3074,1175]},
+			{"t":0,"0":[0,0,2773,1285],"1":[1,0,2993,1281]},
+			{"t":0,"0":[0,0,2834,1277],"1":[1,0,3056,1289]},
+			{"t":0,"0":[0,0,2782,1401],"1":[1,0,2984,1402]},
+			{"t":0,"0":[0,0,2844,1400],"1":[1,0,3047,1405]},
+			{"t":0,"0":[0,0,2782,1519],"1":[1,0,2986,1524]},
+			{"t":0,"0":[0,0,2842,1524],"1":[1,0,3049,1523]},
+			{"t":0,"0":[0,0,2770,1635],"1":[1,0,2998,1644]},
+			{"t":0,"0":[0,0,2829,1647],"1":[1,0,3061,1639]},
+			{"t":0,"0":[0,0,2749,1747],"1":[1,0,3021,1761]},
+			{"t":0,"0":[0,0,2806,1766],"1":[1,0,3082,1752]},
+			{"t":0,"0":[0,0,2719,1855],"1":[1,0,3052,1871]},
+			{"t":0,"0":[0,0,2774,1874],"1":[1,0,3110,1855]},
+			{"t":0,"0":[0,0,2701,1062],"1":[1,0,3026,1037]},
+			{"t":0,"0":[0,0,2750,1043],"1":[1,0,3070,1046]},
+			{"t":0,"0":[0,0,2792,1029],"1":[1,0,3120,1062]},
+			{"t":0,"0":[0,0,2724,1146],"1":[1,0,3000,1127]},
+			{"t":0,"0":[0,0,2774,1131],"1":[1,0,3046,1134]},
+			{"t":0,"0":[0,0,2741,1234],"1":[1,0,2981,1220]},
+			{"t":0,"0":[0,0,2793,1222],"1":[1,0,3027,1225]},
+			{"t":0,"0":[0,0,2752,1323],"1":[1,0,2969,1317]},
+			{"t":0,"0":[0,0,2806,1316],"1":[1,0,3015,1319]},
+			{"t":0,"0":[0,0,2758,1415],"1":[1,0,2963,1415]},
+			{"t":0,"0":[0,0,2811,1412],"1":[1,0,3010,1414]},
+			{"t":0,"0":[0,0,2757,1507],"1":[1,0,2965,1513]},
+			{"t":0,"0":[0,0,2810,1508],"1":[1,0,3011,1510]},
+			{"t":0,"0":[0,0,2750,1599],"1":[1,0,2973,1612]},
+			{"t":0,"0":[0,0,2802,1604],"1":[1,0,3019,1605]},
+			{"t":0,"0":[0,0,2736,1688],"1":[1,0,2989,1708]},
+			{"t":0,"0":[0,0,2788,1698],"1":[1,0,3034,1699]},
+			{"t":0,"0":[0,0,2831,1710],"1":[1,0,3086,1694]},
+			{"t":0,"0":[0,0,2767,1789],"1":[1,0,3054,1791]},
+			{"t":0,"0":[0,0,2809,1804],"1":[1,0,3106,1781]},
+			{"t":0,"0":[0,0,2742,1874],"1":[1,0,3079,1875]},
+			{"t":0,"0":[0,0,2625,2100],"1":[1,0,3170,2115]},
+			{"t":0,"0":[0,0,2673,2126],"1":[1,0,3222,2085]},
+			{"t":0,"0":[0,0,2569,2190],"1":[1,0,3226,2208]},
+			{"t":0,"0":[0,0,2615,2220],"1":[1,0,3276,2174]},
+			{"t":0,"0":[0,0,2505,2278],"1":[1,0,3291,2298]},
+			{"t":0,"0":[0,0,2548,2313],"1":[1,0,3339,2261]},
+			{"t":0,"0":[0,0,2431,2362],"1":[1,0,3364,2384]},
+			{"t":0,"0":[0,0,2352,2440],"1":[1,0,3446,2465]},
+			{"t":0,"0":[0,0,2265,2512],"1":[1,0,3534,2538]},
+			{"t":0,"0":[0,0,2296,2558],"1":[1,0,3574,2492]},
+			{"t":0,"0":[0,0,2174,2574],"1":[1,0,3627,2603]},
+			{"t":0,"0":[0,0,2199,2624],"1":[1,0,3664,2556]},
+			{"t":0,"0":[0,0,2081,2628],"1":[1,0,3722,2658]},
+			{"t":0,"0":[0,0,2602,2078],"1":[1,0,3143,2120]},
+			{"t":0,"0":[0,0,2646,2099],"1":[1,0,3179,2097]},
+			{"t":0,"0":[0,0,2682,2119],"1":[1,0,3222,2074]},
+			{"t":0,"0":[0,0,2559,2148],"1":[1,0,3187,2196]},
+			{"t":0,"0":[0,0,2602,2172],"1":[1,0,3222,2170]},
+			{"t":0,"0":[0,0,2637,2195],"1":[1,0,3265,2145]},
+			{"t":0,"0":[0,0,2553,2245],"1":[1,0,3271,2243]},
+			{"t":0,"0":[0,0,2586,2271],"1":[1,0,3313,2214]},
+			{"t":0,"0":[0,0,2497,2315],"1":[1,0,3325,2313]},
+			{"t":0,"0":[0,0,2529,2345],"1":[1,0,3366,2283]},
+			{"t":0,"0":[0,0,2400,2349],"1":[1,0,3354,2412]},
+			{"t":0,"0":[0,0,2437,2383],"1":[1,0,3385,2381]},
+			{"t":0,"0":[0,0,2466,2415],"1":[1,0,3424,2348]},
+			{"t":0,"0":[0,0,2337,2410],"1":[1,0,3421,2477]},
+			{"t":0,"0":[0,0,2372,2446],"1":[1,0,3450,2444]},
+			{"t":0,"0":[0,0,2399,2480],"1":[1,0,3487,2409]},
+			{"t":0,"0":[0,0,2270,2467],"1":[1,0,3491,2537]},
+			{"t":0,"0":[0,0,2302,2505],"1":[1,0,3518,2504]},
+			{"t":0,"0":[0,0,2326,2541],"1":[1,0,3553,2467]},
+			{"t":0,"0":[0,0,2201,2518],"1":[1,0,3566,2593]},
+			{"t":0,"0":[0,0,2230,2558],"1":[1,0,3591,2558]},
+			{"t":0,"0":[0,0,2250,2597],"1":[1,0,3624,2520]},
+			{"t":0,"0":[0,0,2130,2564],"1":[1,0,3642,2642]},
+			{"t":0,"0":[0,0,2154,2607],"1":[1,0,3666,2607]},
+			{"t":0,"0":[0,0,2171,2646],"1":[1,0,3695,2568]},
+			{"t":0,"0":[0,0,2059,2604],"1":[1,0,3718,2684]},
+			{"t":0,"0":[0,0,2079,2649],"1":[1,0,3740,2649]},
+			{"t":0,"0":[0,0,1890,141],"1":[1,0,3935,180]},
+			{"t":0,"0":[0,0,1775,108],"1":[1,0,4046,145]},
+			{"t":0,"0":[0,0,1651,85],"1":[1,0,4166,121]},
+			{"t":0,"0":[0,0,1522,72],"1":[1,0,4292,107]},
+			{"t":0,"0":[0,0,1389,73],"1":[1,0,4421,105]},
+			{"t":0,"0":[0,0,1256,87],"1":[1,0,4551,116]},
+			{"t":0,"0":[0,0,1124,114],"1":[1,0,4680,139]},
+			{"t":0,"0":[0,0,1005,151],"1":[1,0,4798,172]},
+			{"t":0,"0":[0,0,1901,142],"1":[1,0,3926,185]},
+			{"t":0,"0":[0,0,1885,192],"1":[1,0,3908,137]},
+			{"t":0,"0":[0,0,1810,115],"1":[1,0,4013,157]},
+			{"t":0,"0":[0,0,1797,166],"1":[1,0,3998,108]},
+			{"t":0,"0":[0,0,1703,146],"1":[1,0,4096,83]},
+			{"t":0,"0":[0,0,1605,132],"1":[1,0,4198,66]},
+			{"t":0,"0":[0,0,1507,70],"1":[1,0,4306,109]},
+			{"t":0,"0":[0,0,1505,126],"1":[1,0,4304,56]},
+			{"t":0,"0":[0,0,1401,70],"1":[1,0,4409,107]},
+			{"t":0,"0":[0,0,1402,127],"1":[1,0,4411,54]},
+			{"t":0,"0":[0,0,1294,79],"1":[1,0,4513,114]},
+			{"t":0,"0":[0,0,1188,97],"1":[1,0,4617,129]},
+			{"t":0,"0":[0,0,1085,122],"1":[1,0,4717,151]},
+			{"t":0,"0":[0,0,1104,175],"1":[1,0,4727,101]}
+		]
+	},
+	"assets": [
+		{
+			"id": "ad38d078ed1459b0429c67b6774e3d52",
+			"contenttype": "application/vnd.iccprofile",
+			"size": 596,
+			"encodedsize": 796,
+			"data": "AAACVGxjbXMEQAAAbW50clJHQiBYWVogB+oACgAMAA4ACgARYWNzcE1TRlQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPbWAAEAAAAA0y1sY21zAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALZGVzYwAAAQgAAAA+Y3BydAAAAUgAAABMd3RwdAAAAZQAAAAUY2hhZAAAAagAAAAsclhZWgAAAdQAAAAUYlhZWgAAAegAAAAUZ1hZWgAAAfwAAAAUclRSQwAAAhAAAAAgZ1RSQwAAAhAAAAAgYlRSQwAAAhAAAAAgY2hybQAAAjAAAAAkbWx1YwAAAAAAAAABAAAADGVuVVMAAAAiAAAAHABzAFIARwBCACAASQBFAEMANgAxADkANgA2AC0AMgAuADEAAG1sdWMAAAAAAAAAAQAAAAxlblVTAAAAMAAAABwATgBvACAAYwBvAHAAeQByAGkAZwBoAHQALAAgAHUAcwBlACAAZgByAGUAZQBsAHlYWVogAAAAAAAA9tYAAQAAAADTLXNmMzIAAAAAAAEMSgAABeP///MqAAAHmwAA/Yf///ui///9owAAA9gAAMCUWFlaIAAAAAAAAG+UAAA47gAAA5BYWVogAAAAAAAAJJ0AAA+DAAC2vlhZWiAAAAAAAABipQAAt5AAABjecGFyYQAAAAAAAwAAAAJmZgAA8qcAAA1ZAAAT0AAACltjaHJtAAAAAAADAAAAAKPXAABUewAATM0AAJmaAAAmZgAAD1w="
+		}
+	]
+}

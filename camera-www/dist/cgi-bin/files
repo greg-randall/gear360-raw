@@ -1,0 +1,9 @@
+#!/bin/bash
+# List capture files for the web UI, one per line: path|size_bytes|mtime_epoch
+# Raw dumps (SD root), white-balance sidecars, and camera JPEGs.
+echo "Content-Type: text/plain; charset=utf-8"
+echo "Cache-Control: no-store"
+echo ""
+for f in /sdcard/*.raw /sdcard/*_wb.txt /sdcard/DCIM/*/*.JPG /sdcard/DCIM/*/*.raw /sdcard/DCIM/*/*_wb.txt /sdcard/DCIM/*/*.MP4; do
+    [ -e "$f" ] && stat -c '%n|%s|%Y' "$f"
+done

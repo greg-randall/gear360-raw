@@ -1,0 +1,26 @@
+.log-panel {
+  height: calc(100vh - 120px);
+  min-height: 320px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+.log-entry { border-left: 3px solid var(--bs-secondary); }
+.log-entry.ok { border-left-color: var(--bs-success); }
+.log-entry.err { border-left-color: var(--bs-danger); }
+.log-entry.run { border-left-color: var(--bs-warning); }
+.log-entry pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 40vh;
+  overflow-y: auto;
+  margin: 0;
+  font-size: 0.75rem;
+}
+.risk-read { --bs-badge-color: #000; background-color: var(--bs-success) !important; }
+.risk-set { --bs-badge-color: #000; background-color: var(--bs-warning) !important; }
+.risk-action { background-color: #fd7e14 !important; }
+.risk-never { background-color: var(--bs-danger) !important; }
+.risk-unknown { background-color: var(--bs-secondary) !important; }
+.cmd-row { cursor: default; }
+.cmd-row code { white-space: normal; }
+@media (max-width: 991px) { .log-panel { height: 60vh; } }

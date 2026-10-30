@@ -1,0 +1,17 @@
+{
+ "squares_x": 16,
+ "squares_y": 9,
+ "square_px": 120,
+ "marker_px": 84,
+ "dictionary": "DICT_4X4_250",
+ "legacy_pattern": false,
+ "width": 1920,
+ "height": 1080,
+ "board_origin_px": [
+  0,
+  0
+ ],
+ "inner_corners": 120,
+ "markers": 72,
+ "opencv": "4.11.0"
+}

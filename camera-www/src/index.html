@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gear 360 Control</title>
+<style>/*BOOTSTRAP_CSS*/</style>
+<style>/*APP_CSS*/</style>
+</head>
+<body>
+<nav class="navbar navbar-expand bg-body-tertiary border-bottom sticky-top">
+  <div class="container-fluid gap-2">
+    <span class="navbar-brand fw-semibold">Gear 360</span>
+    <div id="status" class="d-flex flex-wrap gap-1 small flex-grow-1"></div>
+    <span id="busy" class="badge text-bg-secondary">idle</span>
+    <span id="clock" class="badge text-bg-secondary">clock ?</span>
+    <button id="btn-clock" class="btn btn-sm btn-outline-info">Sync clock</button>
+    <button id="btn-status" class="btn btn-sm btn-outline-info">Status</button>
+    <button id="btn-theme" class="btn btn-sm btn-outline-secondary" title="switch light/dark">Dark</button>
+  </div>
+</nav>
+
+<div class="container-fluid py-2">
+  <div class="row g-2">
+    <!-- left: tabs -->
+    <div class="col-lg-6">
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-shoot">Shoot</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-cmds">Commands</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-files">Files</button></li>
+      </ul>
+      <div class="tab-content border border-top-0 rounded-bottom p-2">
+
+        <!-- Shoot -->
+        <div class="tab-pane fade show active" id="tab-shoot">
+          <div class="card mb-2"><div class="card-body p-2">
+            <div class="d-flex flex-wrap gap-3 align-items-center mb-2">
+              <button class="btn btn-success btn-lg px-4" id="btn-photo">Take photo</button>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="sw-raw">
+                <label class="form-check-label" for="sw-raw">Save RAW + WB with every shot</label>
+              </div>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="sw-timer">
+                <label class="form-check-label" for="sw-timer">Self-timer (5 s)</label>
+              </div>
+              <span id="raw-state" class="small text-body-secondary"></span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 align-items-center mb-2">
+              <div class="btn-group btn-group-sm" role="group" aria-label="mode">
+                <input type="radio" class="btn-check" name="mode" id="mode-auto" autocomplete="off">
+                <label class="btn btn-outline-primary" for="mode-auto">Auto</label>
+                <input type="radio" class="btn-check" name="mode" id="mode-manual" autocomplete="off">
+                <label class="btn btn-outline-primary" for="mode-manual">Manual</label>
+              </div>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="sw-isonr">
+                <label class="form-check-label small" for="sw-isonr">high-ISO NR</label>
+              </div>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="sw-ltnr">
+                <label class="form-check-label small" for="sw-ltnr">long-exposure NR</label>
+              </div>
+            </div>
+
+            <label for="sl-shutter" id="lab-shutter" class="form-label small mb-0">Shutter: <b id="lbl-shutter">?</b>
+              <span class="text-body-secondary" id="hint-shutter">(Manual only)</span></label>
+            <input type="range" class="form-range" id="sl-shutter" min="0" max="39" step="1">
+            <label for="sl-iso" class="form-label small mb-0">ISO: <b id="lbl-iso">?</b></label>
+            <input type="range" class="form-range" id="sl-iso" min="0" max="19" step="1">
+          </div></div>
+
+          <div class="card mb-2 d-none" id="last-shot"><div class="card-body p-2 d-flex gap-2 align-items-center">
+            <img id="last-thumb" alt="" class="rounded border" style="width:160px;height:80px;object-fit:cover;cursor:pointer">
+            <div class="small">
+              <div class="text-body-secondary">last shot</div>
+              <div class="fw-semibold font-monospace" id="last-name"></div>
+              <div id="last-time" class="text-body-secondary"></div>
+              <div id="last-badges" class="d-flex gap-1 mt-1"></div>
+            </div>
+          </div></div>
+
+          <div class="accordion" id="shoot-acc">
+            <div class="accordion-item">
+              <h2 class="accordion-header"><button class="accordion-button collapsed py-2" data-bs-toggle="collapse" data-bs-target="#acc-burst">Burst</button></h2>
+              <div id="acc-burst" class="accordion-collapse collapse"><div class="accordion-body p-2">
+                <div class="input-group input-group-sm w-auto">
+                  <button class="btn btn-outline-success" id="btn-burst">Shoot burst</button>
+                  <input id="burst-n" type="number" min="2" max="50" value="5" class="form-control" style="max-width:5em" title="number of photos">
+                  <span class="input-group-text">photos</span>
+                </div>
+                <div class="small text-body-secondary mt-1">Waits for each JPEG before the next shot.</div>
+              </div></div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header"><button class="accordion-button collapsed py-2" data-bs-toggle="collapse" data-bs-target="#acc-bracket">Bracket / HDR</button></h2>
+              <div id="acc-bracket" class="accordion-collapse collapse"><div class="accordion-body p-2">
+                <div class="row g-2 align-items-end">
+                  <div class="col-auto"><label class="form-label small mb-0">slowest</label><select id="br-slow" class="form-select form-select-sm"></select></div>
+                  <div class="col-auto"><label class="form-label small mb-0">fastest</label><select id="br-fast" class="form-select form-select-sm"></select></div>
+                  <div class="col-auto"><label class="form-label small mb-0">step</label>
+                    <select id="br-step" class="form-select form-select-sm"><option value="3">1 stop</option><option value="6">2 stops</option><option value="9" selected>3 stops</option><option value="12">4 stops</option><option value="15">5 stops</option><option value="18">6 stops</option></select></div>
+                  <div class="col-auto"><button class="btn btn-warning btn-sm" id="btn-bracket">Shoot bracket</button></div>
+                  <div class="col-auto"><button class="btn btn-outline-danger btn-sm" id="btn-bracket-stop">Stop</button></div>
+                </div>
+                <div class="small text-body-secondary mt-1" id="br-preview"></div>
+                <div class="small text-body-secondary">Switches to Manual with NR off, uses the ISO slider (Auto becomes 100), and waits
+                  for each JPEG before the next shot. With RAW on, every frame also gets its raw + WB file.</div>
+                <div class="progress mt-2 d-none" id="br-progress" style="height:1.2rem">
+                  <div class="progress-bar progress-bar-striped progress-bar-animated" id="br-bar" style="width:0%"></div>
+                </div>
+                <ol id="br-steps" class="small mb-0 mt-1"></ol>
+              </div></div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header"><button class="accordion-button collapsed py-2" data-bs-toggle="collapse" data-bs-target="#acc-tools">Tools</button></h2>
+              <div id="acc-tools" class="accordion-collapse collapse"><div class="accordion-body p-2 d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-outline-info" id="btn-wb">Read WB</button>
+                <button class="btn btn-sm btn-outline-info" id="btn-lockinfo">Current exposure</button>
+                <button class="btn btn-sm btn-outline-info" id="btn-usrlist">usrlist</button>
+                <button class="btn btn-sm btn-outline-secondary" id="btn-watch-log">Watcher log</button>
+              </div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Commands -->
+        <div class="tab-pane fade" id="tab-cmds">
+          <div class="input-group input-group-sm mb-2">
+            <input id="cmd-custom" class="form-control font-monospace" placeholder="custom command, e.g. st cap capdtm getusr 4">
+            <button class="btn btn-primary" id="btn-run-custom">Run</button>
+          </div>
+          <div class="d-flex flex-wrap gap-3 small mb-2">
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="opt-a7"><label class="form-check-label" for="opt-a7" title="adds ~6-9 s per command">capture A7 log (slow)</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="opt-dlog"><label class="form-check-label" for="opt-dlog">capture dlog</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="opt-never"><label class="form-check-label" for="opt-never">show "never" rows</label></div>
+          </div>
+          <input id="cmd-filter" class="form-control form-control-sm mb-2" placeholder="filter commands…">
+          <div id="cmd-list" class="accordion accordion-flush"></div>
+        </div>
+
+        <!-- Files -->
+        <div class="tab-pane fade" id="tab-files">
+          <div class="d-flex gap-2 mb-2">
+            <button class="btn btn-sm btn-outline-info" id="btn-files">Refresh</button>
+            <span id="files-updated" class="small text-body-secondary align-self-center"></span>
+            <select id="files-kind" class="form-select form-select-sm w-auto">
+              <option value="all">all shots</option><option value="raw">shots with RAW</option><option value="noraw">JPEG only</option>
+            </select>
+          </div>
+          <div class="table-responsive"><table class="table table-sm table-hover small align-middle">
+            <thead><tr><th>shot</th><th>time</th><th>files</th><th></th></tr></thead>
+            <tbody id="files-body"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: debug output -->
+    <div class="col-lg-6">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h6 class="mb-0 me-auto">Debug output</h6>
+        <input id="log-filter" class="form-control form-control-sm w-auto" placeholder="search output">
+        <button class="btn btn-sm btn-outline-secondary" id="btn-log-save">Save</button>
+        <button class="btn btn-sm btn-outline-secondary" id="btn-log-clear">Clear</button>
+      </div>
+      <div id="log" class="log-panel"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toasts"></div>
+
+<!-- photo viewer -->
+<div class="modal fade" id="viewer" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header py-2">
+      <h6 class="modal-title font-monospace" id="viewer-title"></h6>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body p-1 text-center"><img id="viewer-img" class="img-fluid" alt="photo"></div>
+    <div class="modal-footer py-1 justify-content-between">
+      <button class="btn btn-outline-secondary" id="viewer-prev">&larr; newer</button>
+      <span class="small text-body-secondary" id="viewer-res"></span>
+      <a class="btn btn-sm btn-link" id="viewer-dl" href="#">download full size</a>
+      <button class="btn btn-outline-secondary" id="viewer-next">older &rarr;</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- confirm modal -->
+<div class="modal fade" id="confirm" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header"><h6 class="modal-title">Run this command?</h6></div>
+    <div class="modal-body"><p id="confirm-text" class="font-monospace small mb-1"></p><p id="confirm-note" class="small text-warning mb-0"></p></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-warning" id="confirm-ok">Run</button>
+    </div>
+  </div></div>
+</div>
+
+<script>/*BOOTSTRAP_JS*/</script>
+<script>window.COMMANDS = /*COMMANDS_JSON*/;</script>
+<script>/*APP_JS*/</script>
+</body>
+</html>

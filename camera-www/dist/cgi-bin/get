@@ -1,0 +1,61 @@
+#!/bin/bash
+# Serve a file from the SD card with proper headers.
+#   GET /cgi-bin/get?path=<urlencoded absolute path under /sdcard>[&dl=1][&off=N&len=N]
+# dl=1 -> download (attachment); otherwise inline (JPEG previews in the browser).
+# off/len -> only that byte range (the web viewer reads the JPEG header, then the embedded 1920x960 preview).
+
+urldecode() { local s="${1//+/ }"; printf '%b' "${s//%/\\x}"; }
+param() {
+    local kv
+    for kv in ${QUERY_STRING//&/ }; do
+        if [ "${kv%%=*}" = "$1" ]; then urldecode "${kv#*=}"; return; fi
+    done
+}
+
+path="$(param path)"
+dl="$(param dl)"
+off="$(param off)"
+len="$(param len)"
+case "$off$len" in *[!0-9]*) off=""; len="" ;; esac
+
+case "$path" in
+    /sdcard/*) ;;
+    *) path="" ;;
+esac
+case "$path" in *..*) path="" ;; esac
+
+if [ -z "$path" ] || [ ! -f "$path" ]; then
+    echo "Status: 404 Not Found"
+    echo "Content-Type: text/plain"
+    echo ""
+    echo "not found: $(param path)"
+    exit 0
+fi
+
+name="${path##*/}"
+case "$name" in   # bash 3.2 on the camera: no ${var,,}
+    *.jpg | *.JPG | *.jpeg | *.JPEG) type="image/jpeg" ;;
+    *.mp4 | *.MP4) type="video/mp4" ;;
+    *.txt | *.TXT) type="text/plain; charset=utf-8" ;;
+    *) type="application/octet-stream" ;;
+esac
+disp="inline"
+[ "$dl" = 1 ] && disp="attachment"
+
+size=$(stat -c %s "$path")
+if [ -n "$off" ] && [ -n "$len" ]; then
+    if [ "$off" -ge "$size" ]; then len=0; elif [ $((off + len)) -gt "$size" ]; then len=$((size - off)); fi
+    echo "Content-Type: application/octet-stream"
+    echo "Content-Length: $len"
+    echo "Cache-Control: no-store"
+    echo ""
+    [ "$len" -gt 0 ] && tail -c +$((off + 1)) "$path" | head -c "$len"
+    exit 0
+fi
+
+echo "Content-Type: $type"
+echo "Content-Length: $size"
+echo "Content-Disposition: $disp; filename=\"$name\""
+echo "Cache-Control: no-store"
+echo ""
+cat "$path"

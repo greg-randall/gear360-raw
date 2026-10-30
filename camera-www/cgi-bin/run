@@ -1,0 +1,52 @@
+#!/bin/bash
+# Run one shell command on the camera and return plain text for the web UI.
+#   GET /cgi-bin/run?cmd=<urlencoded>&a7=1&dlog=1
+# a7=1   : also return the lines that appeared in the A7 capture log (st cap log) while it ran
+# dlog=1 : also return the new Linux system-log lines (dlogutil), where st app output goes
+# Response headers: X-Exit-Code, X-Duration-Ms. Body sections start with @@REPLY, @@A7, @@DLOG.
+
+urldecode() { local s="${1//+/ }"; printf '%b' "${s//%/\\x}"; }
+param() {
+    local kv
+    for kv in ${QUERY_STRING//&/ }; do
+        if [ "${kv%%=*}" = "$1" ]; then urldecode "${kv#*=}"; return; fi
+    done
+}
+
+cmd="$(param cmd)"
+a7="$(param a7)"
+dl="$(param dlog)"
+tmp="/tmp/www_run.$$"
+
+clean() { sed 's/\x1b\[[0-9;]*m//g; s/T2EX >> //g' | LC_ALL=C tr -cd '\11\12\40-\176'; }
+
+[ "$a7" = 1 ] && st cap log 2>/dev/null | clean | tail -n 800 > "$tmp.a7b"
+[ "$dl" = 1 ] && dlogutil -d -v time 2>/dev/null | clean | tail -n 600 > "$tmp.dlb"
+
+# monotonic milliseconds (date jumps if the command sets the clock)
+mono_ms() { awk '{printf "%d", $1 * 1000}' /proc/uptime; }
+start=$(mono_ms)
+bash -c "$cmd" > "$tmp.out" 2>&1
+rc=$?
+end=$(mono_ms)
+
+if [ "$a7" = 1 ] || [ "$dl" = 1 ]; then sleep 1; fi
+if [ "$a7" = 1 ]; then
+    st cap log 2>/dev/null | clean | tail -n 800 > "$tmp.a7a"
+    grep -vxF -f "$tmp.a7b" "$tmp.a7a" > "$tmp.a7" 2>/dev/null
+fi
+if [ "$dl" = 1 ]; then
+    dlogutil -d -v time 2>/dev/null | clean | tail -n 600 > "$tmp.dla"
+    grep -vxF -f "$tmp.dlb" "$tmp.dla" > "$tmp.dl" 2>/dev/null
+fi
+
+echo "Content-Type: text/plain; charset=utf-8"
+echo "Cache-Control: no-store"
+echo "X-Exit-Code: $rc"
+echo "X-Duration-Ms: $((end - start))"
+echo ""
+echo "@@REPLY"
+clean < "$tmp.out"
+if [ "$a7" = 1 ]; then echo "@@A7"; cat "$tmp.a7"; fi
+if [ "$dl" = 1 ]; then echo "@@DLOG"; cat "$tmp.dl"; fi
+rm -f "$tmp".*

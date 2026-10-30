@@ -1,0 +1,46 @@
+#!/bin/bash
+# Pair raw dumps in the SD root with the JPEG the camera saved for the same shot, and move them next to it:
+#   /sdcard/N_N_11648_5824x2896_bayer_12-16.raw      -> /sdcard/DCIM/100PHOTO/360_0338.raw
+#   /sdcard/N_N_11648_5824x2896_bayer_12-16_wb.txt   -> /sdcard/DCIM/100PHOTO/360_0338_wb.txt
+# The raw is written a few seconds BEFORE its JPEG, so the match is the first JPEG whose mtime is
+# 0..20 s after the raw's mtime. No match (or the target name already exists) -> leave it in place.
+# GET /cgi-bin/tidyraw?dry=1 reports what it would do without moving anything.
+
+echo "Content-Type: text/plain; charset=utf-8"
+echo "Cache-Control: no-store"
+echo ""
+
+dry=0
+case "$QUERY_STRING" in *dry=1*) dry=1 ;; esac
+
+shopt -s nullglob
+jpgs=(/sdcard/DCIM/*/*.JPG)
+raws=(/sdcard/*_bayer_*.raw)
+[ ${#raws[@]} -eq 0 ] && { echo "no raw dumps in /sdcard"; exit 0; }
+
+for raw in "${raws[@]}"; do
+    rt=$(stat -c %Y "$raw")
+    best=""
+    bestd=999
+    for j in "${jpgs[@]}"; do
+        d=$(( $(stat -c %Y "$j") - rt ))
+        if [ "$d" -ge 0 ] && [ "$d" -le 20 ] && [ "$d" -lt "$bestd" ]; then best="$j"; bestd=$d; fi
+    done
+    if [ -z "$best" ]; then
+        echo "no match: $raw (no JPEG saved 0-20 s after it)"
+        continue
+    fi
+    target="${best%.*}.raw"
+    if [ -e "$target" ]; then
+        echo "skip: $raw -> $target already exists"
+        continue
+    fi
+    wb="${raw%.raw}_wb.txt"
+    if [ "$dry" = 1 ]; then
+        echo "would move: $raw -> $target (JPEG +${bestd}s)"
+        [ -e "$wb" ] && echo "would move: $wb -> ${best%.*}_wb.txt"
+        continue
+    fi
+    mv "$raw" "$target" && echo "moved: $raw -> $target (JPEG +${bestd}s)"
+    [ -e "$wb" ] && mv "$wb" "${best%.*}_wb.txt" && echo "moved: $wb -> ${best%.*}_wb.txt"
+done
