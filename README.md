@@ -11,6 +11,7 @@ Tools, camera mod files and findings for shooting RAW on the Samsung Gear 360 (2
 | Exact lens model | Yes | The per-unit factory calibration stored in every photo (maker note `0x0012`), used with the firmware's OCamCalib-style model | [lens-model.md](docs/lens-model.md) |
 | Stitching | Yes | `tools/opax_stitch.py`, or PTGui with a ChArUco-calibrated template | [stitching.md](docs/stitching.md) |
 | Web UI and one-button RAW shot | Yes | Control page on the camera's hotspot; a double-press of Power takes one photo with a RAW | [raw-capture.md](docs/raw-capture.md#ways-to-shoot-raw) |
+| Factory defect-pixel list | Decoded | Each camera's hot/dead pixel tables (from `st util dump`) decoded to coordinates; they match the hot pixels in our raws. Not yet applied by `raw2dng.py` | [defect-pixels.md](docs/defect-pixels.md) |
 | Exposures longer than about 1/6 s | No | Measured cap: a "1 s" request gave about 0.173 s. Every long-exposure path we tried (Bulb, long-exposure NR) hangs the camera until a reboot | [exposure.md](docs/exposure.md) |
 
 ## Quick start
@@ -59,13 +60,14 @@ Raw dumps, with their DNGs and camera JPEGs, are attached to the GitHub Release 
 - [stitching.md](docs/stitching.md): `opax_stitch.py` and its options, Samsung's lens-shading correction, the PTGui template, and calibrating your own unit with ChArUco boards.
 - [exposure.md](docs/exposure.md): setting shutter speed and ISO with `st` commands, the measured ~1/6 s cap and the firmware code behind it, the long-exposure paths that hang, and the S5K2M8 sensor.
 - [commands.md](docs/commands.md): how `st` commands reach the capture RTOS, how to send them over Wi-Fi, the `commands.csv` catalogue and its risk classes, and the commands we found most useful.
+- [defect-pixels.md](docs/defect-pixels.md): the hot pixels in the raw dump, the camera's factory defect tables, their decoded format, `tools/dpc_decode.py`, and how well they match measured hot pixels.
 - [safety.md](docs/safety.md): what hangs or loses the camera, remote recovery with `tools/camrecover.sh`, the never-run list, exFAT card problems, and the mod's security cost.
 - [lab-notebook.md](docs/lab-notebook.md): the working notebook in date order, with dead ends, corrections and guesses.
 
 ## Repo layout
 
 ```
-tools/         PC-side scripts: raw2dng, opax_stitch, PTGui helpers, ChArUco solve, command runner, disassembly helpers, camrecover.sh
+tools/         PC-side scripts: raw2dng, opax_stitch, PTGui helpers, ChArUco solve, defect-table decoder, command runner, disassembly helpers, camrecover.sh
 camera-www/    files for the camera's SD card: web UI source and prebuilt dist/, CGIs, mod.sh, raw watcher, Power double-press script
 utils/         ChArUco board and projector grid generators, with ready-made boards
 templates/     PTGui template calibrated for our unit (charuco_pooled.pts)
