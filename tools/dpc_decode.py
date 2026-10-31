@@ -25,8 +25,12 @@ import time
 
 import numpy as np
 
-NAMES = ['FRONT_LV1', 'FRONT_LV2', 'FRONT_LV3', 'REAR_LV1', 'REAR_LV2', 'REAR_LV3', 'UD_LV1', 'UD_LV2', 'QHD', 'FHD',
-         'FPS120', 'FRONT_CROP_LV1', 'FRONT_CROP_LV2', 'X_4446', 'REAR_CROP_LV1', 'REAR_CROP_LV2']
+# Table names from the A7 firmware (CPP_Preview::set_info_DPC 0x8031a424, AdjustDefectPixelEachMode 0x803a6c5c).
+# Modes 2..7 are the 6 still tables; modes 8..16 are video/liveview and per-lens crop modes.
+# Note: adj_dpc.bin has 16 FIELD_MARK headers on our unit because FRONT_CROP_LENS1 header is duplicated before LENS2.
+NAMES = ['FRONT_LV1', 'FRONT_LV2', 'FRONT_LV3', 'REAR_LV1', 'REAR_LV2', 'REAR_LV3',
+         'UD_LENS1', 'UD_LENS2', 'QHD', 'FHD', 'FPS120',
+         'FRONT_CROP_LENS1', 'FRONT_CROP_LENS2_DUP', 'FRONT_CROP_LENS2', 'REAR_CROP_LENS1', 'REAR_CROP_LENS2']
 STILL_X0 = {'FRONT': 0, 'REAR': 2912}       # dump x offset of each lens half, for the still tables
 FIELD_MARK = b'\x0d\x0d\x00\x02' + b'\x00' * 8  # the 0x02000d0d word followed by 8 zero bytes
 BAYER = 'GRBG'
