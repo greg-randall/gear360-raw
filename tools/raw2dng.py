@@ -6,7 +6,7 @@ The camera's `st cap seq dump on ssif` writes files like
 12-bit data in 16-bit words. This script only adds DNG tags around the data;
 demosaicing is left to dcraw / darktable / Adobe Camera Raw.
 
-Defaults are the values measured for the SM-R210 (see NOTES.md, "RAW test 2"):
+Defaults are the values measured for the SM-R210 (see docs/lab-notebook.md, "RAW test 2"):
 GRBG pattern, 12-bit data high-aligned in 16-bit words, black 4096, white 65472.
 Use `--pattern all` to write one DNG per Bayer pattern for comparison.
 
@@ -20,12 +20,16 @@ as the same camera; UniqueCameraModel stays "Samsung SM-R210 ssif dump" (raw con
 For camera-named raws, the shot's EXIF (exposure time, aperture, ISO, exposure program/mode, metering, capture times,
 focal length 1.2 mm and its 35 mm equivalent) is copied from 360_NNNN.JPG with exiftool, plus a lens name. PTGui needs
 the exposure times to group and merge HDR brackets. --no-exif skips this.
+
+Defect pixels: the raw dump is taken before the camera's defect correction, so its factory hot/dead pixel list
+(adj_dpc.bin from `st util dump`, see docs/defect-pixels.md) is applied here: each listed pixel is replaced by the
+median of its same-colour neighbours. `--dpc auto` picks the list level from the shot's ISO and shutter speed the way
+the camera does; `--dpc none` leaves the data untouched.
 """
 import argparse
 import os
 import re
 import shutil
-import struct
 import subprocess
 import sys
 import time
@@ -36,6 +40,8 @@ from pidng.defs import (CalibrationIlluminant, CFAPattern, DNGVersion,
                         Orientation, PhotometricInterpretation,
                         PreviewColorSpace)
 from pidng.dng import DNGTags, Tag
+
+import dpc_decode
 
 # Measured on the SM-R210 ssif dump, 2026-10-10 (16-bit units).
 DEFAULT_WIDTH = 5824
@@ -51,7 +57,7 @@ PATTERNS = {
     "GBRG": CFAPattern.GBRG,
 }
 
-# --- Camera colour data, read from the SM-R210 (see NOTES.md "Camera colour pipeline") ---
+# --- Camera colour data, read from the SM-R210 (see docs/lab-notebook.md "Camera colour pipeline") ---
 # `st cap iq awb deltae` FrontCC: white-balanced camera RGB -> linear sRGB. Rows sum to 1.
 CAMERA_CC = np.array([[1.804688, -0.742188, -0.062500],
                       [-0.210938, 1.453125, -0.242188],
@@ -211,138 +217,81 @@ def copy_exif(dng, raw_path):
 
 
 def read_jpeg_exposure(jpg_path):
-    """Return (exposure_time_float, iso_int) read from camera JPEG with exiftool."""
-    if not jpg_path or not os.path.exists(jpg_path):
+    """(exposure time in s, ISO) from the camera JPEG with exiftool, or (None, None)."""
+    if not jpg_path or not os.path.exists(jpg_path) or not shutil.which("exiftool"):
         return None, None
+    out = subprocess.run(["exiftool", "-T", "-n", "-ExposureTime", "-ISO", jpg_path],
+                         capture_output=True, text=True).stdout.strip().split("\t")
     try:
-        cmd = ["exiftool", "-s3", "-ExposureTime", "-ISO", jpg_path]
-        out = subprocess.run(cmd, capture_output=True, text=True).stdout.split()
-        if len(out) >= 2:
-            exp_str = out[0]
-            exp_time = float(exp_str.split('/')[0]) / float(exp_str.split('/')[1]) if '/' in exp_str else float(exp_str)
-            iso = int(out[1])
-            return exp_time, iso
-    except Exception:
-        pass
-    return None, None
+        return float(out[0]), int(float(out[1]))
+    except (ValueError, IndexError):          # "-" for a missing tag
+        return None, None
 
 
 def pick_dpc_level(iso, exposure_time):
-    """Return (level_int, reason_str) matching the camera A7 selector (0x803d0e84)."""
+    """Defect-table level for a shot, as the camera's selector picks it (A7 0x803d0e84).
+
+    The selector compares APEX Sv/Tv: Tv >= 4 (1/16 s or faster), Tv >= 0 (up to 1 s); Sv <= 7 (ISO 400),
+    Sv <= 9 (ISO 1600). Its alternative ISO-only rule (an unidentified mode setting) isn't modelled.
+    """
     if exposure_time is None or iso is None:
-        return 2, "default LV2 (no EXIF metadata available)"
-    if exposure_time < 0.0625:  # Shutter speed faster than 1/16 s (Tv >= 0x40)
-        if iso <= 400:
-            return 1, f"LV1 (ISO {iso} <= 400, shutter < 1/16 s)"
-        elif iso <= 1600:
-            return 2, f"LV2 (ISO {iso} 400-1600, shutter < 1/16 s)"
-        else:
-            return 3, f"LV3 (ISO {iso} > 1600, shutter < 1/16 s)"
-    elif exposure_time <= 1.0:  # Shutter speed between 1/16 s and 1 s (0 <= Tv < 0x40)
-        if iso <= 400:
-            return 2, f"LV2 (ISO {iso} <= 400, shutter 1/16s to 1s)"
-        else:
-            return 3, f"LV3 (ISO {iso} > 400, shutter 1/16s to 1s)"
-    else:  # Shutter speed longer than 1 s (Tv < 0)
-        return 3, "LV3 (shutter > 1s)"
+        return 2, "LV2, no ISO/shutter in EXIF"
+    fast, mid = exposure_time <= 1 / 16, exposure_time <= 1.0
+    if fast:
+        level = 1 if iso <= 400 else 2 if iso <= 1600 else 3
+    elif mid:
+        level = 2 if iso <= 400 else 3
+    else:
+        level = 3
+    t = f"1/{round(1 / exposure_time)} s" if exposure_time < 1 else f"{exposure_time:g} s"
+    return level, f"LV{level} for ISO {iso}, {t}"
 
 
 _DPC_CACHE = {}
 
 
-def find_default_dpc_tables():
+def find_dpc_tables(raw_path):
+    """adj_dpc.bin next to the raw, in the working directory, or in this project's calibration dump."""
     here = os.path.dirname(os.path.abspath(__file__))
-    candidates = [
-        os.path.join(here, "../tmp/dpc/tables.npz"),
-        os.path.join(here, "../calibration/util_dump/extracted/tmp/adj_dpc.bin"),
-        os.path.join(here, "../calibration/adj_dpc.bin"),
-        os.path.join(here, "tables.npz"),
-        os.path.join(here, "adj_dpc.bin"),
-    ]
-    for c in candidates:
+    for c in (os.path.join(os.path.dirname(os.path.abspath(raw_path)), "adj_dpc.bin"),
+              "adj_dpc.bin",
+              os.path.join(here, "..", "calibration", "util_dump", "extracted", "tmp", "adj_dpc.bin")):
         if os.path.isfile(c):
             return os.path.normpath(c)
     return None
 
 
 def load_dpc_tables(path):
-    """Load the 6 still tables from .npz or .bin. Caches result in memory."""
-    if path in _DPC_CACHE:
-        return _DPC_CACHE[path]
-    if not path or not os.path.exists(path):
-        return None
-
-    if path.endswith(".npz"):
-        z = np.load(path)
-        res = {k: z[k] for k in z.files}
-        _DPC_CACHE[path] = res
-        return res
-
-    # Decode from adj_dpc.bin
-    data = open(path, "rb").read()
-    field_mark = b'\x0d\x0d\x00\x02' + b'\x00' * 8
-    tables = []
-    for m in re.finditer(re.escape(field_mark), data):
-        o = m.start()
-        n = struct.unpack('<I', data[o + 12:o + 16])[0]
-        tables.append((o + 0x48, n))
-        if len(tables) == 6:
-            break
-
-    weights = 1 << np.arange(12, -1, -1)
-    res = {}
-    names = ['FRONT_LV1', 'FRONT_LV2', 'FRONT_LV3', 'REAR_LV1', 'REAR_LV2', 'REAR_LV3']
-    for name, (start, n) in zip(names, tables):
-        end = len(data) - (len(data) - start) % 4
-        words = np.frombuffer(data[start:end], '<u4')
-        bits = np.unpackbits(words.astype('>u4').view(np.uint8))
-        rows = np.empty(n, np.int32)
-        cols = np.empty(n, np.int32)
-        p, row = 0, 0
-        for i in range(n):
-            if bits[p] == 0:
-                p += 1
-                row = int(bits[p:p + 13] @ weights)
-                p += 13
-            else:
-                p += 1
-            rows[i] = row
-            cols[i] = int(bits[p:p + 13] @ weights)
-            p += 13
-        res[f'{name}_r'] = rows
-        res[f'{name}_c'] = cols
-
-    _DPC_CACHE[path] = res
-    return res
+    """The six still tables {(lens, level): (rows, cols)} from adj_dpc.bin, decoded once per run."""
+    if path not in _DPC_CACHE:
+        data = open(path, "rb").read()
+        found = dpc_decode.find_tables(data)[:6]
+        _DPC_CACHE[path] = {(name.split("_")[0], int(name[-1])): dpc_decode.decode(data, start, n)
+                            for name, (start, n) in zip(dpc_decode.NAMES[:6], found)}
+    return _DPC_CACHE[path]
 
 
 def apply_dpc(raw, tables, level):
-    """Interpolate defective pixels for FRONT and REAR lenses at given level (1, 2, or 3) in place."""
+    """Replace each listed defect with the median of its 8 same-colour neighbours (2 px away), in place.
+
+    Neighbours that would fall outside the lens half are mirrored to the other side, so they keep the same colour.
+    Returns the number of pixels replaced per lens.
+    """
+    counts = {}
     half_w = raw.shape[1] // 2
-    H = raw.shape[0]
+    for lens, x0 in (("FRONT", 0), ("REAR", half_w)):
+        rows, cols = tables[(lens, level)]
+        half = raw[:, x0:x0 + half_w]
+        h, w = half.shape
 
-    for side, half in [('FRONT', raw[:, :half_w]), ('REAR', raw[:, half_w:])]:
-        r_key, c_key = f"{side}_LV{level}_r", f"{side}_LV{level}_c"
-        if r_key not in tables or c_key not in tables:
-            continue
-        rows = tables[r_key]
-        cols = tables[c_key]
-        if len(rows) == 0:
-            continue
-
-        W = half.shape[1]
-        y_m2 = np.clip(rows - 2, 0, H - 1)
-        y_p2 = np.clip(rows + 2, 0, H - 1)
-        x_m2 = np.clip(cols - 2, 0, W - 1)
-        x_p2 = np.clip(cols + 2, 0, W - 1)
-
-        nbrs = np.array([
-            half[y_m2, cols], half[y_p2, cols],
-            half[rows, x_m2], half[rows, x_p2],
-            half[y_m2, x_m2], half[y_m2, x_p2],
-            half[y_p2, x_m2], half[y_p2, x_p2],
-        ])
-        half[rows, cols] = np.median(nbrs, axis=0).astype(np.uint16)
+        def step(v, d, size):
+            u = v + d
+            return np.where((u < 0) | (u >= size), v - d, u)
+        nbrs = [half[step(rows, dy, h), step(cols, dx, w)]
+                for dy in (-2, 0, 2) for dx in (-2, 0, 2) if dy or dx]
+        half[rows, cols] = np.median(np.stack(nbrs), axis=0).astype(raw.dtype)
+        counts[lens] = len(rows)
+    return counts
 
 
 def convert(path, args):
@@ -365,21 +314,18 @@ def convert(path, args):
     report_stats(raw)
 
     if args.dpc != "none":
-        tables_path = args.dpc_tables or find_default_dpc_tables()
-        tables = load_dpc_tables(tables_path) if tables_path else None
-        if tables is None:
-            print("  warning: DPC tables not found (specify --dpc-tables or place adj_dpc.bin in calibration/)")
+        tables_path = args.dpc_tables or find_dpc_tables(path)
+        if not tables_path:
+            print("  defect pixels: not corrected, no adj_dpc.bin found (give --dpc-tables, or --dpc none)")
         else:
             if args.dpc == "auto":
-                exp_time, iso = read_jpeg_exposure(camera_jpeg(path))
-                level, reason = pick_dpc_level(iso, exp_time)
+                exposure, iso = read_jpeg_exposure(camera_jpeg(path))
+                level, reason = pick_dpc_level(iso, exposure)
             else:
-                level = int(args.dpc.replace("lv", ""))
-                reason = f"forced {args.dpc.upper()}"
-            apply_dpc(raw, tables, level)
-            n_front = len(tables.get(f"FRONT_LV{level}_r", []))
-            n_rear = len(tables.get(f"REAR_LV{level}_r", []))
-            print(f"  DPC LV{level} applied: {n_front:,} front / {n_rear:,} rear defects corrected ({reason})")
+                level, reason = int(args.dpc[-1]), f"forced {args.dpc.upper()}"
+            counts = apply_dpc(raw, load_dpc_tables(tables_path), level)
+            print(f"  defect pixels: {counts['FRONT']:,} front / {counts['REAR']:,} rear replaced "
+                  f"({reason}; tables {tables_path})")
 
     print(f"using pattern {args.pattern}, black {args.black}, white {args.white}, colour {args.colour}, "
           f"WB gains R {wb_gains[0]:.3f} B {wb_gains[2]:.3f} (from {wb_src}), "
@@ -428,8 +374,8 @@ def main():
                     help="defect-pixel correction: 'auto' (default: picks LV from EXIF ISO/shutter), "
                          "'lv1'/'lv2'/'lv3', or 'none'")
     ap.add_argument("--dpc-tables", default=None,
-                    help="path to factory defect tables (adj_dpc.bin or tables.npz); "
-                         "default searches calibration/ and tmp/dpc/")
+                    help="the camera's adj_dpc.bin (from st util dump); default: next to the raw, the working "
+                         "directory, or calibration/util_dump/extracted/tmp/")
     args = ap.parse_args()
 
     if args.colour == "camera":

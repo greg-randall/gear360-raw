@@ -14,11 +14,11 @@ Our raws carry many more. A pixel that stands out from its eight same-colour nei
 
 | Table | Defects on our unit | Frame |
 |---|---|---|
-| FRONT_LV1 / LV2 / LV3 | 6,653 / 82,867 / 285,216 | left half of the raw dump (sensor A) |
-| REAR_LV1 / LV2 / LV3 | 6,838 / 87,301 / 265,133 | right half of the raw dump (sensor B) |
+| FRONT_LV1 / LV2 / LV3 | 6,653 / 82,867 / 285,216 | left half of the raw dump |
+| REAR_LV1 / LV2 / LV3 | 6,838 / 87,301 / 265,133 | right half of the raw dump |
 | UD_LENS1 / UD_LENS2, QHD, FHD, FPS120, FRONT_CROP_LENS1 / LENS2, REAR_CROP_LENS1 / LENS2 | 1,361 to 39,422 each | video and crop modes (per lens) |
 
-The six still tables use each lens's own 2912×2896 grid, top-left origin, with no offset or flip: a FRONT entry at column c is dump x = c, a REAR entry is dump x = 2912 + c. The REAR = right-half mapping is verified by the hot pixel above, which is in REAR_LV1, LV2 and LV3 at (2475, 2014) and in no FRONT table. FRONT = left half rests on the match below. The firmware's table writer (`AdjustDefectPixelEachMode` 0x803a6c5c) defines exactly 15 modes (2..16): 6 still tables, 2 4K UHD ("ud") tables, 3 video modes (QHD, FHD, 120fps), and 4 per-lens crop tables ("frontCrop 1/2", "RearCrop 1/2"). On our camera's flash partition, 16 table headers appear because an extra `FRONT_CROP_LENS1` header was copied before `FRONT_CROP_LENS2`.
+The six still tables use each lens's own 2912×2896 grid, top-left origin, with no offset or flip: a FRONT entry at column c is dump x = c, a REAR entry is dump x = 2912 + c. The REAR = right-half mapping is verified by the hot pixel above, which is in REAR_LV1, LV2 and LV3 at (2475, 2014) and in no FRONT table. FRONT = left half rests on the match below. The firmware's table writer (`AdjustDefectPixelEachMode` 0x803a6c5c) defines exactly 15 modes (2..16): 6 still tables, 2 4K UHD ("ud") tables, 3 video modes (QHD, FHD, 120fps), and 4 per-lens crop tables ("frontCrop 1/2", "RearCrop 1/2"). On our camera the file has 16 table headers: the 12th and 13th decode to identical coordinate lists (3,750 each), so one is a duplicate copy; `dpc_decode.py` labels it `FRONT_CROP_LENS2_DUP`.
 
 ### Format
 
@@ -29,7 +29,7 @@ Found by disassembling the camera's own table writer in the A7 firmware (`chunk-
 - Entries are sorted by row, then column. A 0 bit starts a new row: 13-bit row, then 13-bit column. A 1 bit means same row as the entry before: 13-bit column only. The stream ends with a run of 1 bits.
 - An index at 0x200 holds (80 + 16·N, N) pairs per table, i.e. the table's size in the camera's memory (16 bytes per defect there) and its count.
 
-Not understood, and not needed for decoding: the leading count words in each header (990, 1010, 270, 534, …), and two 0 bits inside the end padding of some tables. The two FRONT_CROP tables have the same count (3,750).
+Not understood, and not needed for decoding: the leading count words in each header (990, 1010, 270, 534, …), and two 0 bits inside the end padding of some tables.
 
 ### Decoding
 
@@ -53,34 +53,48 @@ Checked against the 3,460 persistently hot pixels from our 35 raws:
 Of the strongly hot ones (more than 1,600 above their neighbours, 485 pixels), 91% are in LV1. A pixel that is hot in our raws is about 3,400 times more likely to be in LV1 than to be outside every table.
 
 ## The three levels
- 
-LV2 is a subset of LV3, but about half of LV1 is not in LV2. Firmware reverse engineering of `AdjustDefectPixelEachMode` (`0x803a6c5c`) and runtime selector `0x803d0e84` in `chunk-05.bin` explains both the origin of these tables and how the camera uses them:
- 
-1. **Factory test exposures**: All three levels were calibrated at **ISO 1600** ($Av = 0x24 = f/2.2$) at three increasing exposure durations:
-   - **LV1**: $Tv = 0x30$ (3.0 EV = **1/8 s**)
-   - **LV2**: $Tv = 0x18$ (1.5 EV = **~0.35 s**)
-   - **LV3**: $Tv = 0$ (0.0 EV = **1.0 s**)
-   
-   Longer integration times reveal weaker hot pixels that leak dark current over time, causing the defect count to expand from ~6.7k (LV1) to ~85k (LV2) to ~275k (LV3).
- 
-2. **Runtime selection rule**: The camera selects the active table per still capture (`CPP_Capture::set_info_DPC` 0x80395950) dynamically based on the shot's ISO and shutter speed:
- 
-| ISO | Faster than 1/16 s ($Tv \ge 0x40$) | 1/16 s to 1 s ($0 \le Tv < 0x40$) | Longer than 1 s ($Tv < 0$) |
+
+LV2 is a subset of LV3, but about half of LV1 is not in LV2. Two places in the A7 firmware (`chunk-05.bin`) explain where the levels come from and how the camera uses them.
+
+**Factory test exposures.** The factory routine `AdjustDefectPixelEachMode` (0x803a6c5c) sets the exposure and then runs the defect search, once per level, all at ISO 1600 and f/2.2:
+
+| Level | Requested exposure (APEX Tv) |
+|---|---|
+| LV1 | 1/8 s (Tv 0x30) |
+| LV2 | about 0.35 s (Tv 0x18) |
+| LV3 | 1 s (Tv 0) |
+
+A longer exposure lets weaker hot pixels build up enough charge to be caught, which fits the counts growing from LV1 to LV3. Two things don't fit neatly yet. The firmware's own sensor driver caps every still exposure at about 1/6 s ([exposure.md](exposure.md)), so the LV2 and LV3 factory shots may not have run as long as requested; whether the factory line used another path is unknown. And why half of LV1 is missing from LV2 isn't explained: the detection rules themselves (0x803ef2dc, 0x803ef9d0) aren't decoded.
+
+**Runtime selection.** For each still, `CPP_Capture::set_info_DPC` (0x80395950) picks a level through the selector at 0x803d0e84 from the shot's ISO and shutter speed (APEX Sv and Tv; reading those two inputs as ISO and shutter is inferred from how they are used):
+
+| ISO | 1/16 s or faster | slower than 1/16 s, up to 1 s | longer than 1 s |
 |---|---|---|---|
-| Up to ISO 400 | **LV1** | **LV2** | **LV3** |
-| ISO 400 to 1600 | **LV2** | **LV3** | **LV3** |
-| Above ISO 1600 | **LV3** | **LV3** | **LV3** |
- 
-*(Sensor temperature is not read by the selector; an unknown mode setting 7 forces an ISO-only ladder).*
- 
-3. **Empirical dark-frame validation**:
-   Tested on a series of 16 dark frames (1/8000 s to 1/6 s, ISO 100 to 6400):
-   - At **1/8000 s and 1/60 s (ISO 100)**: Only ~110–130 persistent outliers exist, and **85%–90% are in LV1** (100% of severe outliers at $T=1600$ are in the factory tables).
-   - At **1/6 s (ISO 100)**: Dark current integration increases outliers 5× to 627 pixels. **LV2 captures 87.1%** of them, directly validating the 1/16 s threshold where the camera switches from LV1 to LV2.
-   - The reference hot pixel at $(5387, 2014)$ scales linearly with ISO gain (+1,984 DN at ISO 100 up to +28,000 DN at ISO 1600) and is completely suppressed (pixel value 0–2) in matching camera JPEGs, confirming that the camera's ISP DPC stage is active and effective on JPEGs.
- 
+| up to 400 | LV1 | LV2 | LV3 |
+| 400 to 1600 | LV2 | LV3 | LV3 |
+| above 1600 | LV3 | LV3 | LV3 |
+
+Sensor temperature is not an input. When an unidentified mode setting (settings id 0x6f) equals 7, the selector ignores the shutter speed and uses ISO only (LV1 up to ISO 400, LV2 below ISO 6400, LV3 above).
+
+**Dark frames.** A series of 16 dark frames (lenses covered, 1/8000 s to 1/6 s, ISO 100 to 6400) agrees with this:
+- At 1/8000 s and 1/60 s, ISO 100, there are about 110-130 persistent outliers, and 85-90% of them are in LV1, including every strong one.
+- At 1/6 s, ISO 100, the outliers grow about fivefold to 627, and LV2 holds 87% of them. That matches the camera switching from LV1 to LV2 at 1/16 s.
+- The confirmed hot pixel at (5387, 2014) rises with ISO, from about 2,000 above black at ISO 100 to about 28,000 at ISO 1600, and is gone in the camera's JPEGs.
+
 ## Using it
- 
-`raw2dng.py` uses this exact selection matrix: it reads the shot's ISO and shutter speed from EXIF, selects the matching level (LV1, LV2, or LV3) for that shot, and applies defect correction so that output DNGs match the clean camera JPEGs.
- 
-Source: firmware disassembly and dark-frame validation from October 2026.
+
+`raw2dng.py` corrects defects by default (`--dpc auto`). It reads the shot's ISO and shutter speed from the camera JPEG next to the raw, picks the level with the table above (LV2 if the JPEG or its tags are missing), and replaces each listed pixel with the median of its 8 same-colour neighbours before writing the DNG. Fixing the data itself, not adding a DNG bad-pixel opcode, means every converter sees clean data, including dcraw and libraw, which ignore DNG opcodes.
+
+It needs your camera's own `adj_dpc.bin` (from `st util dump`; the tables are per unit). Put it next to the raws or in the working directory, or pass it:
+
+```
+python3 tools/raw2dng.py 360_NNNN.raw --dpc-tables path/to/adj_dpc.bin   # auto level
+python3 tools/raw2dng.py 360_NNNN.raw --dpc lv3                          # force a level
+python3 tools/raw2dng.py 360_NNNN.raw --dpc none                         # leave the data untouched
+```
+
+Without the file it prints a warning and writes the DNG uncorrected.
+
+Checked on our raws: with `--dpc none` the DNG data is identical to the dump; with `--dpc auto` only pixels on the chosen list change. The hot pixel above goes from 6,464 to 4,320 against a neighbour median of 4,288, and on a 1/6 s dark frame (LV2) the listed pixels drop from 37 above black on average to 0, against 0.9 for unlisted pixels.
+
+Source: firmware disassembly and dark-frame tests, October 2026; the notebook's [`st util dump` section](lab-notebook.md#st-util-dump-pref--lens-eeprom-dump-2026-10-10).

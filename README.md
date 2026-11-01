@@ -11,7 +11,7 @@ Tools, camera mod files and findings for shooting RAW on the Samsung Gear 360 (2
 | Exact lens model | Yes | The per-unit factory calibration stored in every photo (maker note `0x0012`), used with the firmware's OCamCalib-style model | [lens-model.md](docs/lens-model.md) |
 | Stitching | Yes | `tools/opax_stitch.py`, or PTGui with a ChArUco-calibrated template | [stitching.md](docs/stitching.md) |
 | Web UI and one-button RAW shot | Yes | Control page on the camera's hotspot; a double-press of Power takes one photo with a RAW | [raw-capture.md](docs/raw-capture.md#ways-to-shoot-raw) |
-| Factory defect-pixel list | Decoded | Each camera's hot/dead pixel tables (from `st util dump`) decoded to coordinates; they match the hot pixels in our raws. Not yet applied by `raw2dng.py` | [defect-pixels.md](docs/defect-pixels.md) |
+| Hot and dead pixels | Yes | Each camera's factory defect tables (from `st util dump`) are decoded; `raw2dng.py` fixes the listed pixels, picking the table level from ISO and shutter speed as the camera does | [defect-pixels.md](docs/defect-pixels.md) |
 | Exposures longer than about 1/6 s | No | Measured cap: a "1 s" request gave about 0.173 s. Every long-exposure path we tried (Bulb, long-exposure NR) hangs the camera until a reboot | [exposure.md](docs/exposure.md) |
 
 ## Quick start
